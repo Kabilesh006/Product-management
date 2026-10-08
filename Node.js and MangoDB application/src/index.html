@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Product Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; }
+    input { margin: 4px; padding: 6px; }
+    button { padding: 6px 12px; cursor: pointer; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    #msg { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Product Management</h2>
+
+  <h3>Insert Product</h3>
+  <input id="productId" type="number" placeholder="Product ID">
+  <input id="productName" placeholder="Product Name">
+  <input id="category" placeholder="Category">
+  <input id="price" type="number" placeholder="Price">
+  <input id="stock" type="number" placeholder="Stock">
+  <input id="brand" placeholder="Brand">
+  <button onclick="addProduct()">Insert</button>
+  <div id="msg"></div>
+
+  <h3>Products</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Category</th>
+        <th>Price</th><th>Stock</th><th>Brand</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+
+  <script>
+    async function loadProducts() {
+      const res = await fetch("products");
+      const products = await res.json();
+      document.getElementById("list").innerHTML = products.map(p => `
+        <tr>
+          <td>${p.productId}</td><td>${p.productName}</td><td>${p.category || ""}</td>
+          <td>${p.price ?? ""}</td><td>${p.stock ?? ""}</td><td>${p.brand || ""}</td>
+          <td><button onclick="deleteProduct(${p.productId})">Delete</button></td>
+        </tr>`).join("");
+    }
+
+    async function addProduct() {
+      const body = {
+        productId: Number(document.getElementById("productId").value),
+        productName: document.getElementById("productName").value,
+        category: document.getElementById("category").value,
+        price: Number(document.getElementById("price").value),
+        stock: Number(document.getElementById("stock").value),
+        brand: document.getElementById("brand").value,
+      };
+      const res = await fetch("products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      document.getElementById("msg").textContent = data.message || data.error;
+      loadProducts();
+    }
+
+    async function deleteProduct(id) {
+      const res = await fetch("products/" + id, { method: "DELETE" });
+      const data = await res.json();
+      document.getElementById("msg").textContent = data.message || data.error;
+      loadProducts();
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
